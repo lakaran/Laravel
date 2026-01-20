@@ -1,0 +1,22 @@
+FROM dunglas/frankenphp:php8.2
+
+WORKDIR /app
+
+COPY . .
+
+RUN apt-get update && apt-get install -y \
+    git unzip libzip-dev libpng-dev libonig-dev libxml2-dev \
+    && docker-php-ext-install pdo pdo_mysql zip
+
+RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
+
+RUN composer install --no-dev --optimize-autoloader
+
+RUN php artisan key:generate || true
+RUN php artisan config:clear
+RUN php artisan route:clear
+RUN php artisan view:clear
+
+EXPOSE 8080
+
+CMD ["frankenphp", "php-server", "--root=public", "--listen=0.0.0.0:8080"]
